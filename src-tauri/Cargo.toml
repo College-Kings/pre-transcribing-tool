@@ -1,5 +1,5 @@
 [package]
-name = "pre_transcribing"
+name = "pre-transcribing-tool"
 version = "1.0.0"
 description = "A Tauri App"
 authors = ["you"]
@@ -16,8 +16,8 @@ tauri-build = { version = "1.*", features = [] }
 tauri = { version = "1.*", features = ["dialog-all", "shell-open"] }
 serde = { version = "1.*", features = ["derive"] }
 serde_json = "1.*"
-regex = "1.9.5"
-dirs = "5.0.1"
+regex = "1.*"
+dirs = "5.*"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
