@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf, sync::Mutex};
+use tauri::State;
 
 #[derive(Serialize, Deserialize)]
 pub struct Settings {
@@ -18,6 +19,17 @@ impl Settings {
             scene_number: Mutex::new(None),
         }
     }
+}
+
+#[tauri::command]
+pub fn get_episode_number(settings: State<Settings>) -> i32 {
+    *settings.episode.lock().unwrap()
+}
+
+#[tauri::command]
+pub fn set_episode_number(settings: State<Settings>, value: i32) {
+    *settings.episode.lock().unwrap() = value;
+    println!("Episode number set to: {}", value)
 }
 
 pub fn initalise_settings() -> Settings {

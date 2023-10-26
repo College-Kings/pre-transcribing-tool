@@ -36,14 +36,17 @@ impl Transcriber {
 
             line = line.trim();
 
-            let re = Regex::new(r#"[a-z]+ +".+""#).unwrap();
+            let re = Regex::new(r#"\w+ +".+""#).unwrap();
             if !re.is_match(line) {
                 continue;
             }
 
             let mut sb = String::new();
             sb.push_str(&" ".repeat(indent_count));
-            sb.push_str(&format!("scene {}s{}_n\n", self.episode, self.scene_number));
+            sb.push_str(&format!(
+                "scene ep{}s{}_n\n",
+                self.episode, self.scene_number
+            ));
             sb.push_str(&" ".repeat(indent_count));
             sb.push_str("with dissolve\n\n");
             sb.push_str(&" ".repeat(indent_count));

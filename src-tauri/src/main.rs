@@ -6,6 +6,7 @@ mod transcriber;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::settings::{get_episode_number, set_episode_number};
 use crate::transcriber::Transcriber;
 use settings::{initalise_settings, Settings};
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -80,7 +81,13 @@ fn main() {
 
     tauri::Builder::default()
         .manage(settings)
-        .invoke_handler(tauri::generate_handler![greet, file_dialogue, convert_file])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            file_dialogue,
+            convert_file,
+            get_episode_number,
+            set_episode_number
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

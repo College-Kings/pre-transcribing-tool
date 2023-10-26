@@ -1,6 +1,21 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
 
+  //#region Episode
+  let episode: number;
+  invoke<number>("get_episode_number").then((value) => (episode = value));
+
+  async function setEpisode(value: number) {
+    await invoke("set_episode_number", { value: value });
+  }
+
+  async function episodeChange(event: Event) {
+    let target = event.target as HTMLInputElement;
+    await setEpisode(parseInt(target.value));
+  }
+  //#endregion
+
+  //#region File
   let chosenFile = "No file selected";
 
   async function browseFiles() {
@@ -14,6 +29,7 @@
   async function convertFile() {
     await invoke("convert_file");
   }
+  //#endregion
 </script>
 
 <main class="container">
@@ -31,8 +47,13 @@
   >
   <div id="windowOutput" />
   <div id="gameVersionGrid">
-    <div id="gameVersion">Game version:</div>
-    <input id="gameVersionInput" type="text" />
+    <div id="gameVersion">Episode Number:</div>
+    <input
+      id="gameVersionInput"
+      type="text"
+      bind:value={episode}
+      on:change={episodeChange}
+    />
   </div>
 </main>
 
