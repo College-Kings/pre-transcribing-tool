@@ -1,23 +1,31 @@
+use regex::Regex;
 use std::fs;
 use std::path::PathBuf;
-use regex::Regex;
 
 pub struct Transcriber {
-    episode: String,
+    episode: i32,
     file: PathBuf,
     scene_number: String,
     lines: Vec<String>,
 }
 
 impl Transcriber {
-    pub fn new(episode: String, file: PathBuf) -> Transcriber {
-        let scene_number = file.file_stem().and_then(|stem| stem.to_str()).map(|stem| stem.replace("scene", "")).unwrap_or("".into());
+    pub fn new(episode: i32, file: PathBuf) -> Transcriber {
+        let scene_number = file
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .map(|stem| stem.replace("scene", ""))
+            .unwrap_or("".into());
 
         Transcriber {
             episode,
             file: file.clone(),
             scene_number,
-            lines: fs::read_to_string(file).unwrap().lines().map(|line| line.to_string()).collect(),
+            lines: fs::read_to_string(file)
+                .unwrap()
+                .lines()
+                .map(|line| line.to_string())
+                .collect(),
         }
     }
 
