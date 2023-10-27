@@ -1,7 +1,7 @@
 [package]
-name = "pre-transcribing-tool"
-version = "1.0.0"
-description = "A Tauri App"
+name = "transcribing-tool"
+version = "1.0.2"
+description = "College Kings Transcring Tool"
 authors = ["you"]
 license = ""
 repository = ""
