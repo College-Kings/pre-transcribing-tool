@@ -1,3 +1,4 @@
+use crate::settings;
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf, sync::Mutex};
 use tauri::State;
@@ -45,8 +46,11 @@ pub fn initialise_settings() -> Settings {
 
         return settings;
     }
-    
-    fs::create_dir_all(&settings_file).unwrap();
-    
-    Settings::new(1)
+
+    let settings = Settings::new(1);
+
+    fs::create_dir_all(&settings_file.parent().unwrap()).unwrap();
+    fs::write(&settings_file, serde_json::to_string(&settings).unwrap()).unwrap();
+
+    settings
 }
