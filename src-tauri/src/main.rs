@@ -1,34 +1,30 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod commands;
+mod error;
+mod file_formatter;
 mod render_table_creator;
 mod settings;
 mod transcriber;
-mod commands;
-mod file_formatter;
 
-
-use settings::{get_episode_number, set_episode_number, initialise_settings};
-use commands::{greet, file_dialogue, convert_file};
-
-const TESTING: bool = true;
+use commands::{convert_file, file_dialogue, greet};
+use settings::{get_episode_number, initialise_settings, set_episode_number};
 
 fn main() {
-    if TESTING {
-        render_table_creator::main::main();
-    } else {
-        let settings = initialise_settings();
+    let settings = initialise_settings();
 
-        tauri::Builder::default()
-            .manage(settings)
-            .invoke_handler(tauri::generate_handler![
+    render_table_creator::main::main(settings);
+    return;
+
+    tauri::Builder::default()
+        .manage(settings)
+        .invoke_handler(tauri::generate_handler![
             greet,
             file_dialogue,
             convert_file,
             get_episode_number,
             set_episode_number
         ])
-            .run(tauri::generate_context!())
-            .expect("error while running tauri application"); 
-    }
-
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
