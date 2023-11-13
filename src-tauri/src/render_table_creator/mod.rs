@@ -1,1 +1,3 @@
-mod main;
+mod config;
+mod docx;
+pub mod main;

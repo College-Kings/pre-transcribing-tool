@@ -1,76 +1,89 @@
+use super::config::{HEADER_KEYS, VALID_SCENE_STATEMENTS};
+use crate::error::Error;
+use crate::render_table_creator::docx::create_doc;
+use crate::settings::Settings;
 use regex::Regex;
-use serde_json::Value::String;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
-use std::sync::Mutex;
 
-struct State {
-    pub episode: Mutex<i32>,
-    pub selected_file: Mutex<Option<PathBuf>>,
-    pub selected_folder: Mutex<Option<PathBuf>>,
-    pub scene_number: Mutex<Option<String>>,
+pub struct SceneItem {
+    pub id: String,
+    pub description: String,
+    pub occurrences: i32,
 }
 
-impl State {
-    pub fn new<T>(episode: T) -> Self
-    where
-        T: Into<i32>,
-    {
+impl SceneItem {
+    pub fn new(id: String, description: String) -> Self {
         Self {
-            episode: Mutex::new(episode.into()),
-            selected_file: Mutex::new(None),
-            selected_folder: Mutex::new(None),
-            scene_number: Mutex::new(None),
+            id,
+            description,
+            occurrences: 1,
         }
     }
 }
 
-fn main() {
-    let state = State {
-        episode: Mutex::new(4),
-        selected_file: Mutex::new(None),
-        selected_folder: Mutex::new(None),
-        scene_number: Mutex::new(Some("12b".to_string())),
-    };
-
-    let _ = process_single_file(state);
+impl PartialEq for SceneItem {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
-fn process_single_file(state: State) -> Result<(), String> {
-    let selected_file = match state.selected_file.lock().unwrap().clone() {
-        Some(path) => path,
-        None => return Err("No file selected".to_string()),
-    };
+pub fn main(settings: Settings) {
+    process_single_file(settings).expect("Failed to process file");
+}
+
+fn process_single_file(settings: Settings) -> Result<(), Error> {
+    // let selected_file = settings.selected_file.lock().unwrap().clone().ok_or("No file selected")?;
+    let selected_file = r"D:\Crimson Sky\College Kings\College-Kings-2\game\ep4\scene1a.rpy";
 
     let mut header_data: HashMap<String, String> = HashMap::new();
-    header_data.insert("Writer".to_string(), String::new());
-    header_data.insert("Scene Number".to_string(), String::new());
-    header_data.insert("Location".to_string(), String::new());
-    header_data.insert("MC Outfit".to_string(), String::new());
-    header_data.insert("Outfit".to_string(), String::new());
-    header_data.insert("Day".to_string(), String::new());
-    header_data.insert("Time".to_string(), String::new());
-    header_data.insert("TR".to_string(), String::new());
+    for key in HEADER_KEYS {
+        header_data.insert(key.to_string(), String::new());
+    }
 
     let file = File::open(selected_file)?;
     let reader = BufReader::new(file);
 
-    let header_capture_regex =
-        Regex::new(&format!("# ({}): (.+)", header_data.keys().join("|"))).unwrap();
+    let header_capture_regex = Regex::new(&format!("# ({}): (.+)", HEADER_KEYS.join("|"))).unwrap();
+    let scene_regex =
+        Regex::new(&format!(r"^({})\s+(\S+)", VALID_SCENE_STATEMENTS.join("|"))).unwrap();
+    let scene_description_regex = Regex::new(r".+#\s*(.+)$").unwrap();
+
+    let mut scene_items: Vec<SceneItem> = Vec::new();
 
     for (index, line) in reader.lines().enumerate() {
-        let line = line?.trim();
+        let line = line?;
+        let line = line.trim();
         let line_number = index + 1;
 
         if let Some(captures) = header_capture_regex.captures(line) {
             let key = captures.get(1).unwrap().as_str();
             let value = captures.get(2).unwrap().as_str();
 
-            header_data.insert(key, value);
+            header_data.insert(key.to_string(), value.to_string());
+            continue;
+        }
+
+        if let Some(captures) = scene_regex.captures(line) {
+            let scene_id = captures.get(2).unwrap().as_str();
+
+            match scene_items.iter_mut().find(|x| x.id == scene_id) {
+                Some(item) => item.occurrences += 1,
+                None => {
+                    let scene_desc = scene_description_regex
+                        .captures(line)
+                        .unwrap()
+                        .get(1)
+                        .unwrap()
+                        .as_str();
+                    scene_items.push(SceneItem::new(scene_id.to_string(), scene_desc.to_string()));
+                }
+            }
+            continue;
         }
     }
+    create_doc(scene_items);
 
     Ok(())
 }
