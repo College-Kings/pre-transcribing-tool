@@ -32,7 +32,7 @@ pub fn set_episode_number(settings: State<Settings>, value: i32) {
     println!("Episode number set to: {}", value)
 }
 
-pub fn initalise_settings() -> Settings {
+pub fn initialise_settings() -> Settings {
     let settings_file = dirs::data_dir()
         .unwrap()
         .join("Viridian")
@@ -44,9 +44,9 @@ pub fn initalise_settings() -> Settings {
         let settings: Settings = serde_json::from_str(&settings).unwrap_or(Settings::new(1));
 
         return settings;
-    } else {
-        fs::create_dir_all(&settings_file).unwrap();
     }
-
+    
+    fs::create_dir_all(&settings_file).unwrap();
+    
     Settings::new(1)
 }
