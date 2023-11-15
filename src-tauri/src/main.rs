@@ -13,9 +13,6 @@ use settings::{get_episode_number, initialise_settings, set_episode_number};
 fn main() {
     let settings = initialise_settings();
 
-    render_table_creator::main::main(settings);
-    return;
-
     tauri::Builder::default()
         .manage(settings)
         .invoke_handler(tauri::generate_handler![
