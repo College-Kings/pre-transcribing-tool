@@ -72,13 +72,12 @@ pub fn convert_file(settings: State<Settings>) {
 
 #[tauri::command]
 pub fn create_render_table(settings: State<Settings>) {
-    let episode = *settings.episode.lock().unwrap();
     let selected_file = settings.selected_file.lock().unwrap().clone();
     let selected_folder = settings.selected_folder.lock().unwrap().clone();
 
     match (selected_file, selected_folder) {
         (Some(path), None) => {
-            let _ = render_table_creator::process_single_file(episode, path.clone());
+            let _ = render_table_creator::process_single_file(path.clone());
             println!("Converted file: {}", path.to_str().unwrap())
         }
         (None, Some(path)) => {
@@ -89,7 +88,7 @@ pub fn create_render_table(settings: State<Settings>) {
                 .collect::<Vec<PathBuf>>();
 
             for file in files {
-                let _ = render_table_creator::process_single_file(episode, file.clone());
+                let _ = render_table_creator::process_single_file(file.clone());
 
                 println!("Converted file: {}", file.to_str().unwrap())
             }
