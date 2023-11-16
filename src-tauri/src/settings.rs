@@ -33,10 +33,10 @@ pub fn set_episode_number(settings: State<Settings>, value: i32) {
 }
 
 pub fn initialise_settings() -> Settings {
-    let settings_file = dirs::data_dir()
+    let settings_file = dirs::config_local_dir()
         .unwrap()
         .join("Viridian")
-        .join("pre-transcriber")
+        .join("TranscribingTool")
         .join("settings.json");
 
     if settings_file.exists() {
