@@ -4,7 +4,6 @@ mod docx;
 mod scene_item;
 
 use crate::error::Error;
-use crate::settings::Settings;
 use animation_item::AnimationItem;
 use config::{HEADER_KEYS, VALID_SCENE_STATEMENTS};
 use docx::create_doc;
@@ -13,15 +12,9 @@ use scene_item::SceneItem;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 
-pub fn main(settings: Settings) {
-    process_single_file(settings).expect("Failed to process file");
-}
-
-fn process_single_file(settings: Settings) -> Result<(), Error> {
-    // let selected_file = settings.selected_file.lock().unwrap().clone().ok_or("No file selected")?;
-    let selected_file = r"D:\Crimson Sky\College Kings\College-Kings-2\game\ep4\scene1a.rpy";
-
+pub fn process_single_file(episode: i32, selected_file: PathBuf) -> Result<(), Error> {
     let mut header_data: HashMap<String, String> = HashMap::new();
 
     let file = File::open(selected_file)?;

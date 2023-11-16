@@ -1,9 +1,11 @@
+use crate::render_table_creator;
+use crate::settings::Settings;
+use crate::transcriber::Transcriber;
+use std::arch::x86_64::__m128;
 use std::fs;
 use std::path::PathBuf;
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tauri::State;
-use crate::settings::Settings;
-use crate::transcriber::Transcriber;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -43,7 +45,7 @@ pub fn file_dialogue(settings: State<Settings>, select_folder: bool) -> String {
 pub fn convert_file(settings: State<Settings>) {
     // TODO: Log conversion progress to main window;
 
-    let episode = settings.episode.lock().unwrap().clone();
+    let episode = *settings.episode.lock().unwrap();
     let selected_file = settings.selected_file.lock().unwrap().clone();
     let selected_folder = settings.selected_folder.lock().unwrap().clone();
 
@@ -61,6 +63,34 @@ pub fn convert_file(settings: State<Settings>) {
 
             for file in files {
                 Transcriber::new(episode.clone(), file.clone()).run();
+
+                println!("Converted file: {}", file.to_str().unwrap())
+            }
+        }
+        _ => {}
+    }
+}
+
+#[tauri::command]
+pub fn create_render_table(settings: State<Settings>) {
+    let episode = *settings.episode.lock().unwrap();
+    let selected_file = settings.selected_file.lock().unwrap().clone();
+    let selected_folder = settings.selected_folder.lock().unwrap().clone();
+
+    match (selected_file, selected_folder) {
+        (Some(path), None) => {
+            let _ = render_table_creator::process_single_file(episode, path.clone());
+            println!("Converted file: {}", path.to_str().unwrap())
+        }
+        (None, Some(path)) => {
+            let files = fs::read_dir(path)
+                .unwrap()
+                .filter_map(|entry| entry.ok())
+                .map(|entry| entry.path())
+                .collect::<Vec<PathBuf>>();
+
+            for file in files {
+                let _ = render_table_creator::process_single_file(episode.clone(), file.clone());
 
                 println!("Converted file: {}", file.to_str().unwrap())
             }

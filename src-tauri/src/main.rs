@@ -7,7 +7,7 @@ mod render_table_creator;
 mod settings;
 mod transcriber;
 
-use commands::{convert_file, file_dialogue, greet};
+use commands::{convert_file, create_render_table, file_dialogue, greet};
 use settings::{get_episode_number, initialise_settings, set_episode_number};
 
 fn main() {
@@ -20,7 +20,8 @@ fn main() {
             file_dialogue,
             convert_file,
             get_episode_number,
-            set_episode_number
+            set_episode_number,
+            create_render_table
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

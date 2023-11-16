@@ -1,123 +1,56 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/tauri";
+    import ToolUI from "./lib/ToolUI.svelte";
 
-  //#region Episode
-  let episode: number;
-  invoke<number>("get_episode_number").then((value) => (episode = value));
+    let currentTool = "fileFormatter";
 
-  async function setEpisode(value: number) {
-    await invoke("set_episode_number", { value: value });
-  }
-
-  async function episodeChange(event: Event) {
-    let target = event.target as HTMLInputElement;
-    await setEpisode(parseInt(target.value));
-  }
-  //#endregion
-
-  //#region File
-  let chosenFile = "No file selected";
-
-  async function browseFiles() {
-    chosenFile = await invoke("file_dialogue", { selectFolder: false });
-  }
-
-  async function browseFolders() {
-    chosenFile = await invoke("file_dialogue", { selectFolder: true });
-  }
-
-  async function convertFile() {
-    await invoke("convert_file");
-  }
-  //#endregion
+    function updateTool(tool: string) {
+        currentTool = tool;
+    }
 </script>
 
 <main class="container">
-  <div id="chosenFile">{chosenFile}</div>
-  <div id="browseGrid">
-    <button id="browseFilesButton" class="button" on:click={browseFiles}>
-      Browse Files</button
-    >
-    <button id="browseFoldersButton" class="button" on:click={browseFolders}
-      >Browse Folders</button
-    >
-  </div>
-  <button id="convertFile" class="button" on:click={convertFile}
-    >Convert File</button
-  >
-  <div id="windowOutput" />
-  <div id="gameVersionGrid">
-    <div id="gameVersion">Episode Number:</div>
-    <input
-      id="gameVersionInput"
-      type="text"
-      bind:value={episode}
-      on:change={episodeChange}
-    />
+  <div class="app_container">
+    <div class="tools">
+      <button class="button" on:click={() => updateTool("fileFormatter")}>File Formatter</button>
+      <button class="button" on:click={() => updateTool("renderTableCreator")}>Render Table Creator</button>
+    </div>
+    <div class="toolUI">
+      <ToolUI {currentTool}/>
+    </div>
   </div>
 </main>
 
 <style>
-  #browseGrid {
-    display: grid;
-    grid-template-columns: 1fr 20px 1fr;
-  }
+    .app_container {
+        display: flex;
+    }
 
-  #gameVersionGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
+    .tools {
+        flex: 1;
+        /*background-color: lightblue;*/
+        padding: 10px;
+    }
 
-  #chosenFile {
-    text-align: center;
-    font-size: 16px;
-    color: white;
-    margin: 10px;
-  }
+    .toolUI {
+        flex: 3;
+        /*background-color: green;*/
+        padding: 10px;
+    }
 
-  #browseFilesButton {
-    grid-row: 1;
-    grid-column: 1;
-    margin-left: 20px;
-  }
+    /*#fileFormatterButton {*/
+    /*    background-color: transparent;*/
+    /*    border: 1px solid white;*/
+    /*    color: white;*/
+    /*    padding: 10px 20px;*/
+    /*    font-size: 16px;*/
+    /*    cursor: pointer;*/
+    /*    border-radius: 5px;*/
+    /*}*/
 
-  #browseFoldersButton {
-    grid-row: 1;
-    grid-column: 3;
-    margin-right: 20px;
-  }
+    /*!* Optional: Add hover effect *!*/
+    /*#fileFormatterButton:hover {*/
+    /*    background-color: white;*/
+    /*    color: black;*/
+    /*}*/
 
-  #convertFile {
-    text-align: center;
-    /* visibility: hidden; */
-    margin-top: 10px;
-  }
-
-  #windowOutput {
-    padding: 10px;
-    color: white;
-    height: 300px;
-  }
-
-  #gameVersion {
-    display: flex;
-    justify-content: end;
-    align-items: center;
-    grid-row: 1;
-    grid-column: 1;
-    margin-right: 20px;
-    color: white;
-    font-size: 16px;
-  }
-
-  #gameVersionInput {
-    grid-row: 1;
-    grid-column: 2;
-    font-size: 16px;
-    color: white;
-    width: 50px;
-    height: 25px;
-    background: none;
-    border: none;
-  }
 </style>
