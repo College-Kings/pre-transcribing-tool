@@ -1,7 +1,6 @@
 use crate::render_table_creator;
 use crate::settings::Settings;
 use crate::transcriber::Transcriber;
-use std::arch::x86_64::__m128;
 use std::fs;
 use std::path::PathBuf;
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -62,7 +61,7 @@ pub fn convert_file(settings: State<Settings>) {
                 .collect::<Vec<PathBuf>>();
 
             for file in files {
-                Transcriber::new(episode.clone(), file.clone()).run();
+                Transcriber::new(episode, file.clone()).run();
 
                 println!("Converted file: {}", file.to_str().unwrap())
             }
@@ -90,7 +89,7 @@ pub fn create_render_table(settings: State<Settings>) {
                 .collect::<Vec<PathBuf>>();
 
             for file in files {
-                let _ = render_table_creator::process_single_file(episode.clone(), file.clone());
+                let _ = render_table_creator::process_single_file(episode, file.clone());
 
                 println!("Converted file: {}", file.to_str().unwrap())
             }

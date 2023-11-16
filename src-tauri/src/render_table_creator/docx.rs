@@ -58,11 +58,11 @@ pub fn create_doc(
     let scene_items_len = scene_items.len() as f32;
 
     let mut render_notes = Run::new();
-    render_notes = render_notes.add_text(&format!("Total Renders: {}", total_render_count));
+    render_notes = render_notes.add_text(format!("Total Renders: {}", total_render_count));
     render_notes = render_notes.add_break(BreakType::TextWrapping);
-    render_notes = render_notes.add_text(&format!("Unique Renders: {}", scene_items_len));
+    render_notes = render_notes.add_text(format!("Unique Renders: {}", scene_items_len));
     render_notes = render_notes.add_break(BreakType::TextWrapping);
-    render_notes = render_notes.add_text(&format!(
+    render_notes = render_notes.add_text(format!(
         "Reused: {}%",
         (100.0 - (scene_items_len / total_render_count as f32 * 100.0)).round()
     ));

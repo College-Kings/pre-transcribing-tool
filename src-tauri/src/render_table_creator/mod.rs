@@ -14,7 +14,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 
-pub fn process_single_file(episode: i32, selected_file: PathBuf) -> Result<(), Error> {
+pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
     let mut header_data: HashMap<String, String> = HashMap::new();
 
     let file = File::open(selected_file)?;
