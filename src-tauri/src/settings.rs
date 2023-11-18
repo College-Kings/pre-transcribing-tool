@@ -1,3 +1,4 @@
+use crate::error::Error;
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf, sync::Mutex};
 use tauri::State;
@@ -32,7 +33,7 @@ pub fn set_episode_number(settings: State<Settings>, value: i32) {
     println!("Episode number set to: {}", value)
 }
 
-pub fn initialise_settings() -> Settings {
+pub fn initialise_settings() -> Result<Settings, Error> {
     let settings_file = dirs::config_local_dir()
         .unwrap()
         .join("Viridian")
@@ -40,16 +41,16 @@ pub fn initialise_settings() -> Settings {
         .join("settings.json");
 
     if settings_file.exists() {
-        let settings = fs::read_to_string(&settings_file).unwrap();
+        let settings = fs::read_to_string(&settings_file)?;
         let settings: Settings = serde_json::from_str(&settings).unwrap_or(Settings::new(1));
 
-        return settings;
+        return Ok(settings);
     }
 
     let settings = Settings::new(1);
 
-    fs::create_dir_all(settings_file.parent().unwrap()).unwrap();
-    fs::write(&settings_file, serde_json::to_string(&settings).unwrap()).unwrap();
+    fs::create_dir_all(settings_file.parent().unwrap())?;
+    fs::write(&settings_file, serde_json::to_string(&settings)?)?;
 
-    settings
+    Ok(settings)
 }
