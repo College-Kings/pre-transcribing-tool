@@ -4,7 +4,9 @@ use std::fmt::Formatter;
 #[derive(Debug)]
 pub enum Error {
     Io(std::io::Error),
-    SyntaxError(String),
+    Regex(regex::Error),
+    SerdeJson(serde_json::Error),
+    Syntax(String),
     Other(String),
 }
 
@@ -20,6 +22,12 @@ impl From<std::io::Error> for Error {
     }
 }
 
+impl From<serde_json::Error> for Error {
+    fn from(value: serde_json::Error) -> Self {
+        Self::SerdeJson(value)
+    }
+}
+
 impl From<&str> for Error {
     fn from(e: &str) -> Self {
         Self::Other(e.to_string())
@@ -29,5 +37,11 @@ impl From<&str> for Error {
 impl From<String> for Error {
     fn from(e: String) -> Self {
         Self::Other(e)
+    }
+}
+
+impl From<regex::Error> for Error {
+    fn from(e: regex::Error) -> Self {
+        Self::Regex(e)
     }
 }
