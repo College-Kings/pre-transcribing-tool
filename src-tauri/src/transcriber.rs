@@ -1,6 +1,7 @@
+use crate::error::Error;
 use regex::Regex;
-use std::fs;
 use std::path::PathBuf;
+use std::{fs, io};
 
 pub struct Transcriber {
     episode: i32,
@@ -10,33 +11,34 @@ pub struct Transcriber {
 }
 
 impl Transcriber {
-    pub fn new(episode: i32, file: PathBuf) -> Transcriber {
+    pub fn new(episode: i32, file: PathBuf) -> Result<Transcriber, io::Error> {
         let scene_number = file
             .file_stem()
             .and_then(|stem| stem.to_str())
             .map(|stem| stem.replace("scene", ""))
             .unwrap_or("".into());
 
-        Transcriber {
+        let lines = fs::read_to_string(&file)?
+            .lines()
+            .map(|line| line.to_string())
+            .collect();
+
+        Ok(Transcriber {
             episode,
-            file: file.clone(),
+            file,
             scene_number,
-            lines: fs::read_to_string(file)
-                .unwrap()
-                .lines()
-                .map(|line| line.to_string())
-                .collect(),
-        }
+            lines,
+        })
     }
 
-    fn add_scene_numbers(&mut self) {
+    fn add_scene_numbers(&mut self) -> Result<(), regex::Error> {
         for i in 0..self.lines.len() {
             let mut line = self.lines[i].as_str();
             let indent_count = line.chars().take_while(|c| c.is_whitespace()).count();
 
             line = line.trim();
 
-            let re = Regex::new(r#"\w+ +".+""#).unwrap();
+            let re = Regex::new(r#"\w+ +".+""#)?;
             if !re.is_match(line) {
                 continue;
             }
@@ -54,11 +56,14 @@ impl Transcriber {
 
             self.lines[i] = sb;
         }
+
+        Ok(())
     }
 
-    pub fn run(&mut self) {
-        self.add_scene_numbers();
+    pub fn run(&mut self) -> Result<(), Error> {
+        self.add_scene_numbers()?;
 
-        fs::write(&self.file, self.lines.join("\n")).unwrap();
+        fs::write(&self.file, self.lines.join("\n"))?;
+        Ok(())
     }
 }
