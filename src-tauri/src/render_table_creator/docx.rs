@@ -3,7 +3,8 @@ use crate::render_table_creator::scene_item::SceneItem;
 use docx_rs::{BreakType, Docx, Paragraph, Run, Table, TableCell, TableRow, WidthType};
 use std::collections::HashMap;
 use std::fs::File;
-use std::path::Path;
+use std::io;
+use std::path::PathBuf;
 
 fn create_table(data: &Vec<SceneItem>) -> Table {
     let mut rows = Vec::with_capacity(data.len() + 1);
@@ -38,14 +39,14 @@ fn create_table(data: &Vec<SceneItem>) -> Table {
 }
 
 pub fn create_doc(
+    path: PathBuf,
     notes: HashMap<String, String>,
     scene_items: Vec<SceneItem>,
     total_render_count: i32,
-) {
+) -> Result<(), io::Error> {
     let table = create_table(&scene_items);
 
-    let path = Path::new(r"D:\Crimson Sky\College Kings\College-Kings-2\game\ep4\scene1a.docx");
-    let file = File::create(path).unwrap();
+    let file = File::create(path)?;
 
     let mut scene_notes = Run::new();
     let empty_string = String::new();
@@ -77,6 +78,7 @@ pub fn create_doc(
         .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Renders").size(36)))
         .add_table(table)
         .build()
-        .pack(file)
-        .unwrap();
+        .pack(file)?;
+
+    Ok(())
 }
