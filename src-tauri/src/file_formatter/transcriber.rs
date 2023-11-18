@@ -46,7 +46,7 @@ impl Transcriber {
             let mut sb = String::new();
             sb.push_str(&" ".repeat(indent_count));
             sb.push_str(&format!(
-                "scene ep{}s{}_n\n",
+                "scene ep{}s{}_\n",
                 self.episode, self.scene_number
             ));
             sb.push_str(&" ".repeat(indent_count));

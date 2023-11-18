@@ -1,6 +1,6 @@
+use crate::file_formatter::transcriber::Transcriber;
 use crate::render_table_creator;
 use crate::settings::Settings;
-use crate::transcriber::Transcriber;
 use std::fs;
 use std::path::PathBuf;
 use tauri::api::dialog::blocking::FileDialogBuilder;
