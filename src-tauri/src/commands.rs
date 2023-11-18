@@ -50,7 +50,10 @@ pub fn convert_file(settings: State<Settings>) {
 
     match (selected_file, selected_folder) {
         (Some(path), None) => {
-            Transcriber::new(episode, path.clone()).run();
+            Transcriber::new(episode, path.clone())
+                .expect("Transcriber Failed")
+                .run()
+                .expect("Transcriber Failed");
             println!("Converted file: {}", path.to_str().unwrap())
         }
         (None, Some(path)) => {
@@ -61,7 +64,10 @@ pub fn convert_file(settings: State<Settings>) {
                 .collect::<Vec<PathBuf>>();
 
             for file in files {
-                Transcriber::new(episode, file.clone()).run();
+                Transcriber::new(episode, file.clone())
+                    .expect("Transcriber Failed")
+                    .run()
+                    .expect("Transcriber Failed");
 
                 println!("Converted file: {}", file.to_str().unwrap())
             }
@@ -78,7 +84,7 @@ pub fn create_render_table(settings: State<Settings>) {
     match (selected_file, selected_folder) {
         (Some(path), None) => {
             let _ = render_table_creator::process_single_file(path.clone());
-            println!("Converted file: {}", path.to_str().unwrap())
+            println!("Created render table: {}", path.to_str().unwrap())
         }
         (None, Some(path)) => {
             let files = fs::read_dir(path)
@@ -88,9 +94,9 @@ pub fn create_render_table(settings: State<Settings>) {
                 .collect::<Vec<PathBuf>>();
 
             for file in files {
-                let _ = render_table_creator::process_single_file(file.clone());
+                let _ = render_table_creator::process_single_file(file.clone()).unwrap();
 
-                println!("Converted file: {}", file.to_str().unwrap())
+                println!("Created render table: {}", file.to_str().unwrap())
             }
         }
         _ => {}
