@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct SceneItem {
     pub id: String,
     pub description: String,
