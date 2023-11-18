@@ -83,8 +83,9 @@ pub fn create_render_table(settings: State<Settings>) {
 
     match (selected_file, selected_folder) {
         (Some(path), None) => {
-            let _ = render_table_creator::process_single_file(path.clone());
-            println!("Created render table: {}", path.to_str().unwrap())
+            if render_table_creator::process_single_file(path.clone()).is_ok() {
+                println!("Created render table: {}", path.to_str().unwrap())
+            }
         }
         (None, Some(path)) => {
             let files = fs::read_dir(path)
@@ -94,9 +95,9 @@ pub fn create_render_table(settings: State<Settings>) {
                 .collect::<Vec<PathBuf>>();
 
             for file in files {
-                let _ = render_table_creator::process_single_file(file.clone()).unwrap();
-
-                println!("Created render table: {}", file.to_str().unwrap())
+                if render_table_creator::process_single_file(file.clone()).is_ok() {
+                    println!("Created render table: {}", file.to_str().unwrap())
+                }
             }
         }
         _ => {}

@@ -37,37 +37,45 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
     let mut animation_items: Vec<AnimationItem> = Vec::new();
 
     let mut total_render_count = 0;
-
     for line in reader.lines() {
         let line = line?;
         let line = line.trim();
 
         if let Some(captures) = header_regex.captures(line) {
-            process_header_data(&mut header_data, captures)?;
+            if let Err(e) = process_header_data(&mut header_data, captures) {
+                println!("Failed to process header: {}", e);
+                return Err(e);
+            }
             continue;
         }
 
         // scene|show image_name
         if let Some(captures) = scene_regex.captures(line) {
-            process_scene(
+            if let Err(e) = process_scene(
                 &mut scene_items,
                 &mut total_render_count,
                 captures,
                 &scene_description_regex,
-            )?;
+            ) {
+                println!("Failed to process scene: {}", e);
+                return Err(e);
+            }
             continue;
         }
 
         // image image_name =
         if let Some(captures) = image_regex.captures(line) {
-            process_image(
+            if let Err(e) = process_image(
                 &mut animation_items,
                 captures,
                 &animation_regex,
                 &mut total_render_count,
                 &mut scene_items,
                 &image_description_regex,
-            )?;
+            ) {
+                println!("Failed to process image: {}", e);
+                return Err(e);
+            }
             continue;
         }
     }
@@ -107,8 +115,13 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
         a_cmp.cmp(&b_cmp)
     });
 
-    create_doc(selected_file, header_data, scene_items, total_render_count)
-        .expect("Failed to create docx");
+    create_doc(
+        selected_file.with_extension("docx"),
+        header_data,
+        scene_items,
+        total_render_count,
+    )
+    .expect("Failed to create docx");
 
     Ok(())
 }
