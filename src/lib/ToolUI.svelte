@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {invoke} from "@tauri-apps/api/tauri";
+    import { invoke } from "@tauri-apps/api/tauri";
 
     export let currentTool: string;
 
@@ -8,25 +8,24 @@
     invoke<number>("get_episode_number").then((value) => (episode = value));
 
     async function setEpisode(value: number) {
-        await invoke("set_episode_number", {value: value});
+        await invoke("set_episode_number", { value: value });
     }
 
     async function episodeChange(event: Event) {
         let target = event.target as HTMLInputElement;
         await setEpisode(parseInt(target.value));
     }
-
     //#endregion
 
     //#region File
     let chosenFile = "No file selected";
 
     async function browseFiles() {
-        chosenFile = await invoke("file_dialogue", {selectFolder: false});
+        chosenFile = await invoke("file_dialogue", { selectFolder: false });
     }
 
     async function browseFolders() {
-        chosenFile = await invoke("file_dialogue", {selectFolder: true});
+        chosenFile = await invoke("file_dialogue", { selectFolder: true });
     }
 
     async function convertFile() {
@@ -36,29 +35,34 @@
     async function createRenderTable() {
         await invoke("create_render_table");
     }
-
     //#endregion
 </script>
 
 <div id="chosenFile">{chosenFile}</div>
 <div id="browseGrid">
-  <button id="browseFilesButton" class="button" on:click={browseFiles}>Browse Files</button>
-  <button id="browseFoldersButton" class="button" on:click={browseFolders}>Browse Folders</button>
+    <button id="browseFilesButton" class="button" on:click={browseFiles}
+        >Browse Files</button
+    >
+    <button id="browseFoldersButton" class="button" on:click={browseFolders}
+        >Browse Folders</button
+    >
 </div>
-{#if (currentTool === "fileFormatter")}
-  <button class="button" on:click={convertFile}>Convert File</button>
-{:else if (currentTool === "renderTableCreator")}
-  <button class="button" on:click={createRenderTable}>Create Render Table</button>
+{#if currentTool === "fileFormatter"}
+    <button class="button" on:click={convertFile}>Convert File</button>
+{:else if currentTool === "renderTableCreator"}
+    <button class="button" on:click={createRenderTable}
+        >Create Render Table</button
+    >
 {/if}
-<div id="windowOutput"/>
+<div id="windowOutput" />
 <div id="gameVersionGrid">
-  <div id="gameVersion">Episode Number:</div>
-  <input
-      id="gameVersionInput"
-      type="text"
-      bind:value={episode}
-      on:change={episodeChange}
-  />
+    <div id="gameVersion">Episode Number:</div>
+    <input
+        id="gameVersionInput"
+        type="text"
+        bind:value={episode}
+        on:change={episodeChange}
+    />
 </div>
 
 <style>
