@@ -5,6 +5,7 @@ mod error;
 mod file_formatter;
 mod render_table_creator;
 mod settings;
+mod speakers;
 
 use commands::{convert_file, create_render_table, file_dialogue, greet};
 use error::Error;

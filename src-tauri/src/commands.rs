@@ -1,6 +1,6 @@
-use crate::file_formatter::transcriber::Transcriber;
-use crate::render_table_creator;
 use crate::settings::Settings;
+use crate::speakers::get_speakers;
+use crate::{file_formatter, render_table_creator};
 use std::fs;
 use std::path::PathBuf;
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -48,31 +48,23 @@ pub fn convert_file(settings: State<Settings>) {
     let selected_file = settings.selected_file.lock().unwrap().clone();
     let selected_folder = settings.selected_folder.lock().unwrap().clone();
 
-    match (selected_file, selected_folder) {
-        (Some(path), None) => {
-            Transcriber::new(episode, path.clone())
-                .expect("Transcriber Failed")
-                .run()
-                .expect("Transcriber Failed");
-            println!("Converted file: {}", path.to_str().unwrap())
-        }
-        (None, Some(path)) => {
-            let files = fs::read_dir(path)
-                .unwrap()
-                .filter_map(|entry| entry.ok())
-                .map(|entry| entry.path())
-                .collect::<Vec<PathBuf>>();
+    if let Some(path) = selected_file {
+        file_formatter::process_single_file(episode, &get_speakers(&path), &path)
+            .expect("Unable to convert file");
+        println!("Converted file: {}", path.to_str().unwrap())
+    } else if let Some(path) = selected_folder {
+        let speakers = get_speakers(&path);
+        let files = fs::read_dir(path)
+            .expect("Unable to read directory")
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .collect::<Vec<PathBuf>>();
 
-            for file in files {
-                Transcriber::new(episode, file.clone())
-                    .expect("Transcriber Failed")
-                    .run()
-                    .expect("Transcriber Failed");
-
-                println!("Converted file: {}", file.to_str().unwrap())
-            }
+        for file in files {
+            file_formatter::process_single_file(episode, &speakers, &file)
+                .expect("Unable to convert file");
+            println!("Converted file: {}", file.to_str().unwrap())
         }
-        _ => {}
     }
 }
 
