@@ -12,7 +12,7 @@
   <div class="app_container">
     <div class="tools">
       <button class:button-selected={currentTool === "writingFormatter"} on:click={() => updateTool("writingFormatter")}>Writing Formatter</button>
-      <button class:button-selected={currentTool === "fileFormatter"} on:click={() => updateTool("fileFormatter")}>Transcribing Formatter</button>
+      <button class:button-selected={currentTool === "transcribingFormatter"} on:click={() => updateTool("transcribingFormatter")}>Transcribing Formatter</button>
       <button class:button-selected={currentTool === "renderTableCreator"} on:click={() => updateTool("renderTableCreator")}>Render Table Creator</button>
     </div>
     <div class="toolUI">

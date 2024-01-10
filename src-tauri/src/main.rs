@@ -2,14 +2,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod commands;
 mod error;
-mod file_formatter;
+mod transcribing_formatter;
 mod regexes;
 mod render_table_creator;
 mod settings;
 mod speakers;
 mod writing_formatter;
+mod utils;
 
-use commands::{convert_file, create_render_table, file_dialogue, greet, run_writing_formatter};
+use commands::{run_transcribing_formatter, create_render_table, file_dialogue, greet, run_writing_formatter};
 use error::Error;
 use settings::{get_episode_number, initialise_settings, set_episode_number};
 
@@ -22,7 +23,7 @@ fn main() -> Result<(), Error> {
             greet,
             file_dialogue,
             run_writing_formatter,
-            convert_file,
+            run_transcribing_formatter,
             get_episode_number,
             set_episode_number,
             create_render_table
