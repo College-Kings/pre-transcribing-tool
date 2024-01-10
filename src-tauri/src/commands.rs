@@ -1,6 +1,7 @@
 use crate::settings::Settings;
 use crate::speakers::get_speakers;
-use crate::{file_formatter, render_table_creator, writing_formatter};
+use crate::utils::get_files_from_dir;
+use crate::{render_table_creator, transcribing_formatter, writing_formatter};
 use std::fs;
 use std::path::PathBuf;
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -51,11 +52,7 @@ pub fn run_writing_formatter(settings: State<Settings>) {
         println!("Converted file: {}", path.to_str().unwrap())
     } else if let Some(path) = selected_folder {
         let speakers = get_speakers(&path);
-        let files = fs::read_dir(path)
-            .expect("Unable to read directory")
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.path())
-            .collect::<Vec<PathBuf>>();
+        let files = get_files_from_dir(path);
 
         for file in files {
             writing_formatter::process_single_file(&speakers, &file)
@@ -66,7 +63,7 @@ pub fn run_writing_formatter(settings: State<Settings>) {
 }
 
 #[tauri::command]
-pub fn convert_file(settings: State<Settings>) {
+pub fn run_transcribing_formatter(settings: State<Settings>) {
     // TODO: Log conversion progress to main window;
 
     let episode = *settings.episode.lock().unwrap();
@@ -74,17 +71,15 @@ pub fn convert_file(settings: State<Settings>) {
     let selected_folder = settings.selected_folder.lock().unwrap().clone();
 
     if let Some(path) = selected_file {
-        file_formatter::process_single_file(episode, &path).expect("Unable to convert file");
+        transcribing_formatter::process_single_file(episode, &path)
+            .expect("Unable to convert file");
         println!("Converted file: {}", path.to_str().unwrap())
     } else if let Some(path) = selected_folder {
-        let files = fs::read_dir(path)
-            .expect("Unable to read directory")
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.path())
-            .collect::<Vec<PathBuf>>();
+        let files = get_files_from_dir(path);
 
         for file in files {
-            file_formatter::process_single_file(episode, &file).expect("Unable to convert file");
+            transcribing_formatter::process_single_file(episode, &file)
+                .expect("Unable to convert file");
             println!("Converted file: {}", file.to_str().unwrap())
         }
     }
