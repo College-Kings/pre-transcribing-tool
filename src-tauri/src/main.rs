@@ -3,11 +3,13 @@
 mod commands;
 mod error;
 mod file_formatter;
+mod regexes;
 mod render_table_creator;
 mod settings;
 mod speakers;
+mod writing_formatter;
 
-use commands::{convert_file, create_render_table, file_dialogue, greet};
+use commands::{convert_file, create_render_table, file_dialogue, greet, run_writing_formatter};
 use error::Error;
 use settings::{get_episode_number, initialise_settings, set_episode_number};
 
@@ -19,6 +21,7 @@ fn main() -> Result<(), Error> {
         .invoke_handler(tauri::generate_handler![
             greet,
             file_dialogue,
+            run_writing_formatter,
             convert_file,
             get_episode_number,
             set_episode_number,

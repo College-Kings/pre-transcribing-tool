@@ -1,6 +1,6 @@
 use crate::settings::Settings;
 use crate::speakers::get_speakers;
-use crate::{file_formatter, render_table_creator};
+use crate::{file_formatter, render_table_creator, writing_formatter};
 use std::fs;
 use std::path::PathBuf;
 use tauri::api::dialog::blocking::FileDialogBuilder;
@@ -41,15 +41,12 @@ pub fn file_dialogue(settings: State<Settings>, select_folder: bool) -> String {
 }
 
 #[tauri::command]
-pub fn convert_file(settings: State<Settings>) {
-    // TODO: Log conversion progress to main window;
-
-    let episode = *settings.episode.lock().unwrap();
+pub fn run_writing_formatter(settings: State<Settings>) {
     let selected_file = settings.selected_file.lock().unwrap().clone();
     let selected_folder = settings.selected_folder.lock().unwrap().clone();
 
     if let Some(path) = selected_file {
-        file_formatter::process_single_file(episode, &get_speakers(&path), &path)
+        writing_formatter::process_single_file(&get_speakers(&path), &path)
             .expect("Unable to convert file");
         println!("Converted file: {}", path.to_str().unwrap())
     } else if let Some(path) = selected_folder {
@@ -61,8 +58,33 @@ pub fn convert_file(settings: State<Settings>) {
             .collect::<Vec<PathBuf>>();
 
         for file in files {
-            file_formatter::process_single_file(episode, &speakers, &file)
+            writing_formatter::process_single_file(&speakers, &file)
                 .expect("Unable to convert file");
+            println!("Converted file: {}", file.to_str().unwrap())
+        }
+    }
+}
+
+#[tauri::command]
+pub fn convert_file(settings: State<Settings>) {
+    // TODO: Log conversion progress to main window;
+
+    let episode = *settings.episode.lock().unwrap();
+    let selected_file = settings.selected_file.lock().unwrap().clone();
+    let selected_folder = settings.selected_folder.lock().unwrap().clone();
+
+    if let Some(path) = selected_file {
+        file_formatter::process_single_file(episode, &path).expect("Unable to convert file");
+        println!("Converted file: {}", path.to_str().unwrap())
+    } else if let Some(path) = selected_folder {
+        let files = fs::read_dir(path)
+            .expect("Unable to read directory")
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .collect::<Vec<PathBuf>>();
+
+        for file in files {
+            file_formatter::process_single_file(episode, &file).expect("Unable to convert file");
             println!("Converted file: {}", file.to_str().unwrap())
         }
     }
