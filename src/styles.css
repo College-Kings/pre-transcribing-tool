@@ -66,6 +66,7 @@ button {
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
     margin-bottom: 10px;
     text-align: center;
+    outline: none;
 }
 
 button {
@@ -81,9 +82,11 @@ button:active {
     background-color: #e8e8e8;
 }
 
-input,
-button {
-    outline: none;
+.button-selected {
+    border-color: #396cd8;
+    background-color: #e6e6e6;
+    color: #0f0f0f;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
 }
 
 #greet-input {

@@ -1,7 +1,7 @@
 <script lang="ts">
     import ToolUI from "./lib/ToolUI.svelte";
 
-    let currentTool = "fileFormatter";
+    let currentTool = "writingFormatter";
 
     function updateTool(tool: string) {
         currentTool = tool;
@@ -11,8 +11,9 @@
 <main class="container">
   <div class="app_container">
     <div class="tools">
-      <button class="button" on:click={() => updateTool("fileFormatter")}>File Formatter</button>
-      <button class="button" on:click={() => updateTool("renderTableCreator")}>Render Table Creator</button>
+      <button class:button-selected={currentTool === "writingFormatter"} on:click={() => updateTool("writingFormatter")}>Writing Formatter</button>
+      <button class:button-selected={currentTool === "fileFormatter"} on:click={() => updateTool("fileFormatter")}>Transcribing Formatter</button>
+      <button class:button-selected={currentTool === "renderTableCreator"} on:click={() => updateTool("renderTableCreator")}>Render Table Creator</button>
     </div>
     <div class="toolUI">
       <ToolUI {currentTool}/>

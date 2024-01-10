@@ -28,6 +28,10 @@
         chosenFile = await invoke("file_dialogue", { selectFolder: true });
     }
 
+    async function runWritingFormatter() {
+        await invoke("run_writing_formatter");
+    }
+    
     async function convertFile() {
         await invoke("convert_file");
     }
@@ -47,7 +51,9 @@
         >Browse Folders</button
     >
 </div>
-{#if currentTool === "fileFormatter"}
+{#if currentTool === "writingFormatter"}
+    <button class="button" on:click={runWritingFormatter}>Convert File</button>
+{:else if currentTool === "fileFormatter"}
     <button class="button" on:click={convertFile}>Convert File</button>
 {:else if currentTool === "renderTableCreator"}
     <button class="button" on:click={createRenderTable}
