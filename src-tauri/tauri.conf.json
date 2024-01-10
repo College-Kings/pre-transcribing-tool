@@ -7,8 +7,8 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "Transcribing Tool",
-    "version": "2.0.2"
+    "productName": "College Kings Tool",
+    "version": "2.1.0"
   },
   "tauri": {
     "allowlist": {
@@ -40,7 +40,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "Transcribing Tool",
+        "title": "College Kings Tool",
         "width": 500,
         "height": 600
       }
