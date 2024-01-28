@@ -57,9 +57,7 @@ fn add_scene_number(
 
     let mut sb = String::new();
     sb.push_str(&" ".repeat(indent_count));
-    sb.push_str(&format!("scene ep{}s{}_\n", episode, scene_number));
-    sb.push_str(&" ".repeat(indent_count));
-    sb.push_str("with dissolve\n\n");
+    sb.push_str(&format!("scene ep{}s{}_\n\n", episode, scene_number));
     sb.push_str(line.trim_end());
 
     Ok(sb)
