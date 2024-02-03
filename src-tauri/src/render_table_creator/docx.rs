@@ -1,36 +1,65 @@
-use crate::render_table_creator::config::HEADER_KEYS;
 use crate::render_table_creator::scene_item::SceneItem;
-use docx_rs::{BreakType, Docx, Paragraph, Run, Table, TableCell, TableRow, WidthType};
+use docx_rs::{BreakType, Docx, Paragraph, Run, RunFonts, Table, TableCell, TableRow, WidthType};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io;
-use std::path::PathBuf;
+use tauri::api::dialog::blocking::FileDialogBuilder;
 
 fn create_table(data: &Vec<SceneItem>) -> Table {
     let mut rows = Vec::with_capacity(data.len() + 1);
 
     rows.push(TableRow::new(vec![
-        TableCell::new()
-            .width(1250, WidthType::Auto)
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Scene ID"))),
-        TableCell::new()
-            .width(7250, WidthType::Auto)
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Description"))),
-        TableCell::new()
-            .width(500, WidthType::Auto)
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Occurrences"))),
+        TableCell::new().width(1250, WidthType::Auto).add_paragraph(
+            Paragraph::new().add_run(
+                Run::new()
+                    .fonts(RunFonts::new().ascii("Arial"))
+                    .size(24)
+                    .add_text("Scene ID"),
+            ),
+        ),
+        TableCell::new().width(7250, WidthType::Auto).add_paragraph(
+            Paragraph::new().add_run(
+                Run::new()
+                    .fonts(RunFonts::new().ascii("Arial"))
+                    .size(24)
+                    .add_text("Description"),
+            ),
+        ),
+        TableCell::new().width(500, WidthType::Auto).add_paragraph(
+            Paragraph::new().add_run(
+                Run::new()
+                    .fonts(RunFonts::new().ascii("Arial"))
+                    .size(24)
+                    .add_text("Occurrences"),
+            ),
+        ),
     ]));
 
     for d in data {
         rows.push(TableRow::new(vec![
-            TableCell::new()
-                .width(1250, WidthType::Auto)
-                .add_paragraph(Paragraph::new().add_run(Run::new().add_text(&d.id))),
-            TableCell::new()
-                .width(7250, WidthType::Auto)
-                .add_paragraph(Paragraph::new().add_run(Run::new().add_text(&d.description))),
+            TableCell::new().width(1250, WidthType::Auto).add_paragraph(
+                Paragraph::new().add_run(
+                    Run::new()
+                        .fonts(RunFonts::new().ascii("Arial"))
+                        .size(24)
+                        .add_text(&d.id),
+                ),
+            ),
+            TableCell::new().width(7250, WidthType::Auto).add_paragraph(
+                Paragraph::new().add_run(
+                    Run::new()
+                        .fonts(RunFonts::new().ascii("Arial"))
+                        .size(24)
+                        .add_text(&d.description),
+                ),
+            ),
             TableCell::new().width(500, WidthType::Auto).add_paragraph(
-                Paragraph::new().add_run(Run::new().add_text(d.occurrences.to_string())),
+                Paragraph::new().add_run(
+                    Run::new()
+                        .fonts(RunFonts::new().ascii("Arial"))
+                        .size(24)
+                        .add_text(d.occurrences.to_string()),
+                ),
             ),
         ]))
     }
@@ -39,26 +68,25 @@ fn create_table(data: &Vec<SceneItem>) -> Table {
 }
 
 pub fn create_doc(
-    path: PathBuf,
-    notes: HashMap<String, String>,
+    scene_number: &str,
+    notes: HashMap<String, Vec<String>>,
+    notes_order: Vec<String>,
     scene_items: Vec<SceneItem>,
     total_render_count: i32,
 ) -> Result<(), io::Error> {
     let table = create_table(&scene_items);
 
-    let file = File::create(path)?;
-
-    let mut scene_notes = Run::new();
-    let empty_string = String::new();
-    for key in HEADER_KEYS {
-        let x = notes.get(key).unwrap_or(&empty_string);
-        scene_notes = scene_notes.add_text(&format!("{}: {}", key, x));
-        scene_notes = scene_notes.add_break(BreakType::TextWrapping);
+    let mut scene_notes = Run::new().fonts(RunFonts::new().ascii("Arial")).size(24);
+    for key in notes_order {
+        for value in notes.get(&key).unwrap() {
+            scene_notes = scene_notes.add_text(&format!("{}: {}", key, value));
+            scene_notes = scene_notes.add_break(BreakType::TextWrapping);
+        }
     }
 
     let scene_items_len = scene_items.len() as f32;
 
-    let mut render_notes = Run::new();
+    let mut render_notes = Run::new().fonts(RunFonts::new().ascii("Arial")).size(24);
     render_notes = render_notes.add_text(format!("Total Renders: {}", total_render_count));
     render_notes = render_notes.add_break(BreakType::TextWrapping);
     render_notes = render_notes.add_text(format!("Unique Renders: {}", scene_items_len));
@@ -68,17 +96,50 @@ pub fn create_doc(
         (100.0 - (scene_items_len / total_render_count as f32 * 100.0)).round()
     ));
 
-    Docx::new()
+    let docx = Docx::new()
         .add_paragraph(
-            Paragraph::new().add_run(Run::new().add_text("Scene 1a Render Table").size(56)),
+            Paragraph::new().add_run(
+                Run::new()
+                    .add_text(format!("Scene {} Render Table", scene_number))
+                    .fonts(RunFonts::new().ascii("Arial"))
+                    .size(56),
+            ),
         )
-        .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Scene Notes").size(32)))
+        .add_paragraph(
+            Paragraph::new().add_run(
+                Run::new()
+                    .add_text("Scene Notes")
+                    .fonts(RunFonts::new().ascii("Arial"))
+                    .size(32),
+            ),
+        )
         .add_paragraph(Paragraph::new().add_run(scene_notes))
         .add_paragraph(Paragraph::new().add_run(render_notes))
-        .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Renders").size(36)))
-        .add_table(table)
-        .build()
-        .pack(file)?;
+        .add_paragraph(
+            Paragraph::new().add_run(
+                Run::new()
+                    .add_text("Renders")
+                    .fonts(RunFonts::new().ascii("Arial"))
+                    .size(36),
+            ),
+        )
+        .add_table(table);
+
+    save_docx_file(docx, scene_number)?;
+
+    Ok(())
+}
+
+fn save_docx_file(docx: Docx, scene_number: &str) -> Result<(), io::Error> {
+    if let Some(path) = FileDialogBuilder::new()
+        .set_file_name(&format!("scene{}", scene_number))
+        .set_title("Save DOCX File")
+        .add_filter("Word Document (*.docx)", &["docx"])
+        .save_file()
+    {
+        let file = File::create(path)?;
+        docx.build().pack(file)?;
+    }
 
     Ok(())
 }
