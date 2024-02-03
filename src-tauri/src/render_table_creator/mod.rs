@@ -1,12 +1,15 @@
 mod animation_item;
-mod config;
+pub mod config;
 mod docx;
 mod scene_item;
 
 use crate::error::Error;
+use crate::regexes::{
+    ANIMATION_REGEX, HEADER_REGEX, IMAGE_DESCRIPTION_REGEX, IMAGE_REGEX, SCENE_DESCRIPTION_REGEX,
+    SCENE_REGEX,
+};
 use crate::render_table_creator::config::IGNORE_SCENES;
 use animation_item::AnimationItem;
-use config::{HEADER_KEYS, VALID_SCENE_STATEMENTS};
 use docx::create_doc;
 use regex::{Captures, Regex};
 use scene_item::SceneItem;
@@ -16,23 +19,19 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 
 pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
-    let mut header_data: HashMap<String, String> = HashMap::new();
+    let mut header_data: HashMap<String, Vec<String>> = HashMap::new();
+    let mut header_order: Vec<String> = Vec::new();
+    let scene_number = selected_file
+        .file_stem()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .replace("scene", "");
 
     let file = File::open(&selected_file)?;
     let reader = BufReader::new(file);
 
-    let header_regex = Regex::new(&format!(r"^#\s*({}):\s*(.+)", HEADER_KEYS.join("|")))?;
-    let scene_regex = Regex::new(&format!(
-        r"^({})\s+(\S+)(.*)",
-        VALID_SCENE_STATEMENTS.join("|")
-    ))?;
-    let scene_description_regex = Regex::new(r".+#\s*(.+)$")?;
-    let image_regex = Regex::new(r"^image\s+(\S+)\s*=(.+)")?;
-    let image_description_regex = Regex::new(r#""\s*(.+)"$"#)?;
-    let animation_regex = Regex::new(
-        r#"\s*Movie\((?:play="([^"]+)",\s*)?(?:clothing="([^"]+)",\s*)?(?:angle="([^"]+)",\s*)?(?:speed="([^"]+)")?\)"#,
-    )?;
-
+    let mut header = true;
     let mut scene_items: Vec<SceneItem> = Vec::new();
     let mut animation_items: Vec<AnimationItem> = Vec::new();
 
@@ -41,21 +40,33 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
         let line = line?;
         let line = line.trim();
 
-        if let Some(captures) = header_regex.captures(line) {
-            if let Err(e) = process_header_data(&mut header_data, captures) {
-                println!("Failed to process header: {}", e);
-                return Err(e);
+        if line.is_empty() {
+            continue;
+        }
+
+        if header {
+            if line.starts_with("label") {
+                header = false;
+                continue;
+            }
+
+            if let Some(captures) = HEADER_REGEX.captures(line) {
+                if let Err(e) = process_header_data(&mut header_data, &mut header_order, captures) {
+                    println!("Failed to process header: {}", e);
+                    return Err(e);
+                }
+                continue;
             }
             continue;
         }
 
         // scene|show image_name
-        if let Some(captures) = scene_regex.captures(line) {
+        if let Some(captures) = SCENE_REGEX.captures(line) {
             if let Err(e) = process_scene(
                 &mut scene_items,
                 &mut total_render_count,
                 captures,
-                &scene_description_regex,
+                &SCENE_DESCRIPTION_REGEX,
             ) {
                 println!("Failed to process scene: {}", e);
                 return Err(e);
@@ -64,14 +75,14 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
         }
 
         // image image_name =
-        if let Some(captures) = image_regex.captures(line) {
+        if let Some(captures) = IMAGE_REGEX.captures(line) {
             if let Err(e) = process_image(
                 &mut animation_items,
                 captures,
-                &animation_regex,
+                &ANIMATION_REGEX,
                 &mut total_render_count,
                 &mut scene_items,
-                &image_description_regex,
+                &IMAGE_DESCRIPTION_REGEX,
             ) {
                 println!("Failed to process image: {}", e);
                 return Err(e);
@@ -116,8 +127,9 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
     });
 
     create_doc(
-        selected_file.with_extension("docx"),
+        &scene_number,
         header_data,
+        header_order,
         scene_items,
         total_render_count,
     )
@@ -127,7 +139,8 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
 }
 
 fn process_header_data(
-    header_data: &mut HashMap<String, String>,
+    header_data: &mut HashMap<String, Vec<String>>,
+    header_order: &mut Vec<String>,
     captures: Captures,
 ) -> Result<(), Error> {
     let key = captures
@@ -141,8 +154,12 @@ fn process_header_data(
 
     header_data
         .entry(key.to_string())
-        .and_modify(|x| *x = format!("{}; {}", x, value))
-        .or_insert(value.to_string());
+        .and_modify(|x| x.push(value.to_string()))
+        .or_insert(vec![value.to_string()]);
+
+    if !header_order.contains(&key.to_string()) {
+        header_order.push(key.to_string());
+    }
 
     Ok(())
 }
