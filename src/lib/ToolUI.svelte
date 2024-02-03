@@ -22,10 +22,12 @@
 
     async function browseFiles() {
         chosenFile = await invoke("file_dialogue", { selectFolder: false });
+        invoke<number>("get_episode_number").then((value) => (episode = value));
     }
 
     async function browseFolders() {
         chosenFile = await invoke("file_dialogue", { selectFolder: true });
+        episode = await invoke<number>("get_episode_number");
     }
 
     async function runWritingFormatter() {

@@ -3,7 +3,7 @@ use crate::speakers::get_speakers;
 use crate::utils::get_files_from_dir;
 use crate::{render_table_creator, transcribing_formatter, writing_formatter};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::api::dialog::blocking::FileDialogBuilder;
 use tauri::State;
 
@@ -11,16 +11,35 @@ use tauri::State;
 
 #[tauri::command]
 pub fn file_dialogue(settings: State<Settings>, select_folder: bool) -> String {
+    fn update_episode_number(path: &Path, settings: &State<Settings>) {
+        for component in path.components() {
+            let component = component.as_os_str().to_str().unwrap();
+            if component.starts_with("ep") {
+                *settings.episode.lock().unwrap() = component.replace("ep", "").parse().unwrap();
+            }
+        }
+    }
+
     if select_folder {
         *settings.selected_file.lock().unwrap() = None;
-        *settings.selected_folder.lock().unwrap() = FileDialogBuilder::new().pick_folder()
+        let folder_path = FileDialogBuilder::new().pick_folder();
+
+        if let Some(path) = &folder_path {
+            update_episode_number(path, &settings);
+        }
+        *settings.selected_folder.lock().unwrap() = folder_path;
     } else {
         *settings.selected_folder.lock().unwrap() = None;
 
-        *settings.selected_file.lock().unwrap() = FileDialogBuilder::new()
+        let file_path = FileDialogBuilder::new()
             .add_filter("Renpy Files (*.rpy)", &["rpy"])
             .add_filter("All Files", &["*"])
-            .pick_file()
+            .pick_file();
+
+        if let Some(path) = &file_path {
+            update_episode_number(path, &settings);
+        }
+        *settings.selected_file.lock().unwrap() = file_path
     }
 
     if select_folder {
