@@ -2,15 +2,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod commands;
 mod error;
-mod transcribing_formatter;
 mod regexes;
 mod render_table_creator;
 mod settings;
 mod speakers;
-mod writing_formatter;
+mod transcribing_formatter;
 mod utils;
+mod writing_formatter;
 
-use commands::{run_transcribing_formatter, create_render_table, file_dialogue, run_writing_formatter};
+use commands::{
+    create_render_table, file_dialogue, run_transcribing_formatter, run_writing_formatter,
+};
 use error::Error;
 use settings::{get_episode_number, initialise_settings, set_episode_number};
 
