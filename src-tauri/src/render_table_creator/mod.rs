@@ -5,18 +5,29 @@ mod scene_item;
 
 use crate::error::Error;
 use crate::regexes::{
-    ANIMATION_REGEX, HEADER_REGEX, IMAGE_DESCRIPTION_REGEX, IMAGE_REGEX, SCENE_DESCRIPTION_REGEX,
-    SCENE_REGEX,
+    ANIMATION_REGEX, FRAT_SCENE_REGEX, HEADER_REGEX, IMAGE_DESCRIPTION_REGEX, IMAGE_REGEX,
+    SCENE_DESCRIPTION_REGEX, SCENE_REGEX,
 };
 use crate::render_table_creator::config::IGNORE_SCENES;
 use animation_item::AnimationItem;
 use docx::create_doc;
+use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use scene_item::SceneItem;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
+
+lazy_static! {
+    static ref FRAT_SCENE_REPLACEMENTS: HashMap<&'static str, &'static str> = {
+        let mut m = HashMap::new();
+        m.insert("apes", "wolves");
+        m.insert("Apes", "Wolves");
+        m.insert("APE", "WOLF");
+        m
+    };
+}
 
 pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
     let mut header_data: HashMap<String, Vec<String>> = HashMap::new();
@@ -62,12 +73,17 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
 
         // scene|show image_name
         if let Some(captures) = SCENE_REGEX.captures(line) {
-            if let Err(e) = process_scene(
-                &mut scene_items,
-                &mut total_render_count,
-                captures,
-                &SCENE_DESCRIPTION_REGEX,
-            ) {
+            if let Err(e) = process_scene(&mut scene_items, &mut total_render_count, captures) {
+                println!("Failed to process scene: {}", e);
+                return Err(e);
+            }
+            continue;
+        }
+
+        // frat_scene image_name
+        if let Some(captures) = FRAT_SCENE_REGEX.captures(line) {
+            if let Err(e) = process_frat_scene(&mut scene_items, &mut total_render_count, captures)
+            {
                 println!("Failed to process scene: {}", e);
                 return Err(e);
             }
@@ -82,7 +98,6 @@ pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
                 &ANIMATION_REGEX,
                 &mut total_render_count,
                 &mut scene_items,
-                &IMAGE_DESCRIPTION_REGEX,
             ) {
                 println!("Failed to process image: {}", e);
                 return Err(e);
@@ -168,7 +183,6 @@ fn process_scene(
     scene_items: &mut Vec<SceneItem>,
     render_count: &mut i32,
     captures: Captures,
-    description_regex: &Regex,
 ) -> Result<(), Error> {
     let id = captures
         .get(2)
@@ -186,7 +200,7 @@ fn process_scene(
     *render_count += 1;
 
     if let Some(rest) = captures.get(3) {
-        match description_regex.captures(rest.as_str()) {
+        match SCENE_DESCRIPTION_REGEX.captures(rest.as_str()) {
             Some(captures) => {
                 let desc = captures
                     .get(1)
@@ -198,8 +212,62 @@ fn process_scene(
                 let scene = scene_items
                     .iter_mut()
                     .find(|x| x.id == id)
-                    .ok_or_else(|| Error::Syntax(format!("Scene {} has no description", id,)))?;
+                    .ok_or_else(|| Error::Syntax(format!("Scene {} has no description", id)))?;
                 scene.occurrences += 1;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn process_frat_scene(
+    scene_items: &mut Vec<SceneItem>,
+    render_count: &mut i32,
+    captures: Captures,
+) -> Result<(), Error> {
+    let base_id = captures
+        .get(2)
+        .ok_or_else(|| Error::Syntax(format!("Invalid scene capture: {:?}", captures)))?
+        .as_str();
+
+    if IGNORE_SCENES.contains(&base_id) {
+        return Ok(());
+    }
+
+    let apes_id = format!("{base_id}a");
+    let wolves_id = format!("{base_id}w");
+
+    *render_count += 2;
+
+    if let Some(rest) = captures.get(3) {
+        match SCENE_DESCRIPTION_REGEX.captures(rest.as_str()) {
+            Some(captures) => {
+                let raw_desc = captures
+                    .get(1)
+                    .ok_or_else(|| Error::Syntax(format!("Scene {} has no description", base_id)))?
+                    .as_str();
+
+                if let Some((apes_desc, wolves_desc)) = raw_desc.split_once('|') {
+                    push_scene_to_vec(scene_items, &apes_id, apes_desc)?;
+                    push_scene_to_vec(scene_items, &wolves_id, wolves_desc)?;
+                } else {
+                    push_scene_to_vec(scene_items, &apes_id, raw_desc)?;
+
+                    let mut wolves_desc = raw_desc.to_string();
+                    for (old, new) in FRAT_SCENE_REPLACEMENTS.iter() {
+                        wolves_desc = wolves_desc.replace(old, new);
+                    }
+                    push_scene_to_vec(scene_items, &wolves_id, &wolves_desc)?
+                }
+            }
+            None => {
+                for id in [apes_id, wolves_id] {
+                    let scene = scene_items
+                        .iter_mut()
+                        .find(|x| x.id == id)
+                        .ok_or_else(|| Error::Syntax(format!("Scene {} has no description", id)))?;
+                    scene.occurrences += 1;
+                }
             }
         }
     }
@@ -245,7 +313,6 @@ fn process_image(
     animation_regex: &Regex,
     render_count: &mut i32,
     scene_items: &mut Vec<SceneItem>,
-    image_description_regex: &Regex,
 ) -> Result<(), Error> {
     let id = captures.get(1).unwrap().as_str();
     let rest = captures.get(2).unwrap().as_str();
@@ -258,7 +325,7 @@ fn process_image(
 
     *render_count += 1;
 
-    match image_description_regex.captures(rest) {
+    match IMAGE_DESCRIPTION_REGEX.captures(rest) {
         Some(captures) => {
             let desc = captures
                 .get(1)
