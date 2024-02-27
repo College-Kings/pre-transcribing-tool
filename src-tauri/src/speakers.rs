@@ -1,12 +1,7 @@
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-lazy_static! {
-    static ref CHARACTER_DEFINITION_REGEX: Regex =
-        Regex::new(r#"^ *define ([\w.]+) *= *Character\(_?\(?"([^"]+)""#).unwrap();
-}
+use crate::regexes::CHARACTER_DEFINITION_REGEX;
 
 pub fn get_speakers(file_path: &Path) -> HashMap<String, String> {
     let mut character_file = find_game_folder(file_path).expect("Unable to find game folder");

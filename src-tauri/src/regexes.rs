@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 lazy_static! {
-    pub static ref DIALOGUE_LINE_REGEX: Regex = Regex::new(r#"^ *(\w+) +".+""#).unwrap();
+    pub static ref DIALOGUE_LINE_REGEX: Regex = Regex::new(r#"^ *(\w+) +".+("$| #)"#).unwrap();
     pub static ref OUTFIT_HEADER_REGEX: Regex = Regex::new(r#"^# Outfit: (\w+),$"#).unwrap();
     pub static ref HEADER_REGEX: Regex = Regex::new(r"^#\s*(.+):\s*(.+)").unwrap();
     pub static ref SCENE_REGEX: Regex = Regex::new(r"^(scene|show)\s+(\S+)(.*)").unwrap();
@@ -13,4 +13,5 @@ lazy_static! {
     pub static ref ANIMATION_REGEX: Regex = Regex::new(
         r#"\s*Movie\((?:play="([^"]+)",\s*)?(?:clothing="([^"]+)",\s*)?(?:angle="([^"]+)",\s*)?(?:speed="([^"]+)")?\)"#
     ).unwrap();
+    pub static ref CHARACTER_DEFINITION_REGEX: Regex = Regex::new(r#"^ *define ([\w.]+) *= *(Character|Speaker)\(_?\(?"([^"]+)""#).unwrap();
 }
