@@ -1,5 +1,4 @@
 use crate::settings::Settings;
-use crate::speakers::get_speakers;
 use crate::utils::get_files_from_dir;
 use crate::{render_table_creator, transcribing_formatter, writing_formatter};
 use std::fs;
@@ -61,12 +60,21 @@ pub fn run_writing_formatter(settings: State<Settings>) {
     let selected_file = settings.selected_file.lock().unwrap().clone();
     let selected_folder = settings.selected_folder.lock().unwrap().clone();
 
-    if let Some(path) = selected_file {
-        writing_formatter::process_single_file(&get_speakers(&path), &path)
-            .expect("Unable to convert file");
-        println!("Converted file: {}", path.to_str().unwrap())
-    } else if let Some(path) = selected_folder {
-        let speakers = get_speakers(&path);
+    let path = match (selected_file, selected_folder) {
+        (Some(path), None) => path,
+        (None, Some(path)) => path,
+        _ => return,
+    };
+
+    let speakers = match settings.get_speakers(&path) {
+        Ok(speakers) => speakers,
+        Err(e) => {
+            println!("{}", e);
+            return;
+        }
+    };
+
+    if path.is_dir() {
         let files = get_files_from_dir(path);
 
         for file in files {
@@ -74,6 +82,9 @@ pub fn run_writing_formatter(settings: State<Settings>) {
                 .expect("Unable to convert file");
             println!("Converted file: {}", file.to_str().unwrap())
         }
+    } else {
+        writing_formatter::process_single_file(&speakers, &path).expect("Unable to convert file");
+        println!("Converted file: {}", path.to_str().unwrap())
     }
 }
 
