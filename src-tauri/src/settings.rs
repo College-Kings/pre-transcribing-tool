@@ -1,5 +1,5 @@
 use crate::{
-    error::Error, regexes::CHARACTER_DEFINITION_REGEX, utils::find_game_folder, SETTINGS_PATH,
+    error::Result, regexes::CHARACTER_DEFINITION_REGEX, utils::find_game_folder, SETTINGS_PATH,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -21,7 +21,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new(episode: i32) -> Result<Self, Error> {
+    pub fn new(episode: i32) -> Result<Self> {
         if let Ok(settings) = Self::load() {
             return Ok(settings);
         }
@@ -40,17 +40,17 @@ impl Settings {
         Ok(settings)
     }
 
-    pub fn save(&self) -> Result<(), Error> {
+    pub fn save(&self) -> Result<()> {
         fs::write(SETTINGS_PATH.as_path(), serde_json::to_string(&self)?)?;
         Ok(())
     }
 
-    pub fn load() -> Result<Self, Error> {
+    pub fn load() -> Result<Self> {
         let settings = fs::read_to_string(SETTINGS_PATH.as_path())?;
         Ok(serde_json::from_str(&settings)?)
     }
 
-    pub fn update_speakers(&self, file_path: &Path) -> Result<(), Error> {
+    pub fn update_speakers(&self, file_path: &Path) -> Result<()> {
         let character_file = find_game_folder(file_path)
             .ok_or("Unable to find game folder")?
             .join("characters.rpy");
@@ -84,7 +84,7 @@ impl Settings {
         Ok(())
     }
 
-    pub fn get_speakers(&self, file_path: &Path) -> Result<HashMap<String, String>, Error> {
+    pub fn get_speakers(&self, file_path: &Path) -> Result<HashMap<String, String>> {
         let _ = self.update_speakers(file_path);
         let speakers = self.speakers.lock().unwrap();
 

@@ -13,7 +13,7 @@ mod writing_formatter;
 use commands::{
     create_render_table, file_dialogue, run_transcribing_formatter, run_writing_formatter,
 };
-use error::Error;
+use error::Result;
 use events::on_exit;
 use lazy_static::lazy_static;
 use settings::{get_episode_number, set_episode_number, Settings};
@@ -25,7 +25,7 @@ lazy_static! {
     pub static ref SETTINGS_PATH: PathBuf = DATA_ROOT.join("settings.json");
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     fs::create_dir_all(DATA_ROOT.as_path())?;
 
     let app = tauri::Builder::default()

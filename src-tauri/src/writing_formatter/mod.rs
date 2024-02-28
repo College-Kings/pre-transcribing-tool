@@ -1,13 +1,10 @@
-use crate::error::Error;
+use crate::error::Result;
 use crate::regexes::DIALOGUE_LINE_REGEX;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 
-pub fn process_single_file(
-    speakers_map: &HashMap<String, String>,
-    path: &Path,
-) -> Result<(), Error> {
+pub fn process_single_file(speakers_map: &HashMap<String, String>, path: &Path) -> Result<()> {
     let mut lines: Vec<String> = fs::read_to_string(path)?
         .lines()
         .map(|line| line.to_string())
@@ -26,7 +23,7 @@ pub fn process_single_file(
     Ok(())
 }
 
-fn add_speaker(line: &mut str, speakers: &mut HashSet<String>) -> Result<(), regex::Error> {
+fn add_speaker(line: &mut str, speakers: &mut HashSet<String>) -> Result<()> {
     if !DIALOGUE_LINE_REGEX.is_match(line) {
         return Ok(());
     }

@@ -1,6 +1,8 @@
 use std::fmt;
 use std::fmt::Formatter;
 
+pub type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug)]
 pub enum Error {
     Io(std::io::Error),
@@ -22,6 +24,12 @@ impl From<std::io::Error> for Error {
     }
 }
 
+impl From<regex::Error> for Error {
+    fn from(e: regex::Error) -> Self {
+        Self::Regex(e)
+    }
+}
+
 impl From<serde_json::Error> for Error {
     fn from(value: serde_json::Error) -> Self {
         Self::SerdeJson(value)
@@ -37,11 +45,5 @@ impl From<&str> for Error {
 impl From<String> for Error {
     fn from(e: String) -> Self {
         Self::Other(e)
-    }
-}
-
-impl From<regex::Error> for Error {
-    fn from(e: regex::Error) -> Self {
-        Self::Regex(e)
     }
 }

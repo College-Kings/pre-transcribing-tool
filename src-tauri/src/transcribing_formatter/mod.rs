@@ -1,12 +1,12 @@
 mod outfit_map;
 
-use crate::error::Error;
+use crate::error::Result;
 use crate::regexes::{DIALOGUE_LINE_REGEX, OUTFIT_HEADER_REGEX};
 use crate::transcribing_formatter::outfit_map::OUTFIT_MAP;
 use std::fs;
 use std::path::Path;
 
-pub fn process_single_file(episode: i32, path: &Path) -> Result<(), Error> {
+pub fn process_single_file(episode: i32, path: &Path) -> Result<()> {
     let scene_number = path
         .file_stem()
         .and_then(|stem| stem.to_str())
@@ -44,11 +44,7 @@ pub fn process_single_file(episode: i32, path: &Path) -> Result<(), Error> {
     Ok(())
 }
 
-fn add_scene_number(
-    line: &mut str,
-    episode: i32,
-    scene_number: &str,
-) -> Result<String, regex::Error> {
+fn add_scene_number(line: &mut str, episode: i32, scene_number: &str) -> Result<String> {
     let indent_count = line.chars().take_while(|c| c.is_whitespace()).count();
 
     if !DIALOGUE_LINE_REGEX.is_match(line) {

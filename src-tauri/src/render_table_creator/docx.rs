@@ -1,3 +1,4 @@
+use crate::error::Result;
 use crate::render_table_creator::scene_item::SceneItem;
 use docx_rs::{BreakType, Docx, Paragraph, Run, RunFonts, Table, TableCell, TableRow, WidthType};
 use std::collections::HashMap;
@@ -73,7 +74,7 @@ pub fn create_doc(
     notes_order: Vec<String>,
     scene_items: Vec<SceneItem>,
     total_render_count: i32,
-) -> Result<(), io::Error> {
+) -> Result<()> {
     let table = create_table(&scene_items);
 
     let mut scene_notes = Run::new().fonts(RunFonts::new().ascii("Arial")).size(24);
@@ -130,7 +131,7 @@ pub fn create_doc(
     Ok(())
 }
 
-fn save_docx_file(docx: Docx, scene_number: &str) -> Result<(), io::Error> {
+fn save_docx_file(docx: Docx, scene_number: &str) -> Result<()> {
     if let Some(path) = FileDialogBuilder::new()
         .set_file_name(&format!("scene{}", scene_number))
         .set_title("Save DOCX File")
@@ -138,7 +139,7 @@ fn save_docx_file(docx: Docx, scene_number: &str) -> Result<(), io::Error> {
         .save_file()
     {
         let file = File::create(path)?;
-        docx.build().pack(file)?;
+        docx.build().pack(file).map_err(io::Error::from)?;
     }
 
     Ok(())

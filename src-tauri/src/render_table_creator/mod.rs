@@ -3,7 +3,7 @@ pub mod config;
 mod docx;
 mod scene_item;
 
-use crate::error::Error;
+use crate::error::{Error, Result};
 use crate::regexes::{
     ANIMATION_REGEX, FRAT_SCENE_REGEX, HEADER_REGEX, IMAGE_DESCRIPTION_REGEX, IMAGE_REGEX,
     SCENE_DESCRIPTION_REGEX, SCENE_REGEX,
@@ -29,7 +29,7 @@ lazy_static! {
     };
 }
 
-pub fn process_single_file(selected_file: PathBuf) -> Result<(), Error> {
+pub fn process_single_file(selected_file: PathBuf) -> Result<()> {
     let mut header_data: HashMap<String, Vec<String>> = HashMap::new();
     let mut header_order: Vec<String> = Vec::new();
     let scene_number = selected_file
@@ -157,7 +157,7 @@ fn process_header_data(
     header_data: &mut HashMap<String, Vec<String>>,
     header_order: &mut Vec<String>,
     captures: Captures,
-) -> Result<(), Error> {
+) -> Result<()> {
     let key = captures
         .get(1)
         .ok_or_else(|| Error::Syntax(format!("Invalid header capture: {:?}", captures)))?
@@ -183,7 +183,7 @@ fn process_scene(
     scene_items: &mut Vec<SceneItem>,
     render_count: &mut i32,
     captures: Captures,
-) -> Result<(), Error> {
+) -> Result<()> {
     let id = captures
         .get(2)
         .ok_or_else(|| Error::Syntax(format!("Invalid scene capture: {:?}", captures)))?
@@ -224,7 +224,7 @@ fn process_frat_scene(
     scene_items: &mut Vec<SceneItem>,
     render_count: &mut i32,
     captures: Captures,
-) -> Result<(), Error> {
+) -> Result<()> {
     let base_id = captures
         .get(2)
         .ok_or_else(|| Error::Syntax(format!("Invalid scene capture: {:?}", captures)))?
@@ -278,7 +278,7 @@ fn process_animation(
     animation_items: &mut Vec<AnimationItem>,
     captures: Captures,
     id: &str,
-) -> Result<(), Error> {
+) -> Result<()> {
     let desc = captures
         .get(1)
         .ok_or_else(|| Error::Syntax(format!("Animation {} has no description", id)))?
@@ -313,7 +313,7 @@ fn process_image(
     animation_regex: &Regex,
     render_count: &mut i32,
     scene_items: &mut Vec<SceneItem>,
-) -> Result<(), Error> {
+) -> Result<()> {
     let id = captures.get(1).unwrap().as_str();
     let rest = captures.get(2).unwrap().as_str();
 
@@ -345,7 +345,7 @@ fn process_image(
     Ok(())
 }
 
-fn push_scene_to_vec(scene_items: &mut Vec<SceneItem>, id: &str, desc: &str) -> Result<(), Error> {
+fn push_scene_to_vec(scene_items: &mut Vec<SceneItem>, id: &str, desc: &str) -> Result<()> {
     match scene_items.iter_mut().find(|x| x.id == id) {
         Some(item) => {
             if item.description != desc {
