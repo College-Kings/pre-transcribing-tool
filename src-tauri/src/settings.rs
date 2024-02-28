@@ -73,7 +73,7 @@ impl Settings {
                 .unwrap()
                 .as_str()
                 .trim_start_matches("character.");
-            let character_name = captures.get(2).unwrap().as_str();
+            let character_name = captures.get(3).unwrap().as_str();
 
             speakers.insert(character_var.into(), character_name.into());
         }
