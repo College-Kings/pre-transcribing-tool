@@ -46,9 +46,9 @@ fn add_header_data(speakers_map: &HashMap<String, String>, speakers: HashSet<Str
     let mut sb = String::new();
     sb.push_str("# Writer: \n");
     sb.push_str("# Location: \n");
-    sb.push_str("# Outfit: MC, \n");
     for speaker in speakers {
         if speaker == "u" {
+            sb.push_str("# Outfit: MC, \n");
             continue;
         }
 
